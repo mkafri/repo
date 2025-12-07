@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+    options {
+        // Keep only the last 10 builds to save disk space
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        // Abort if the pipeline hangs
+        timeout(time: 30, unit: 'MINUTES')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Checking out source code from SCM...'
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Building with Maven...'
+                sh 'mvn -B clean package'
+            }
+        }
+
+        stage('Unit Tests') {
+            steps {
+                echo 'Running unit tests...'
+                sh 'mvn -B test'
+            }
+            post {
+                always {
+                    // Publish JUnit test results in Jenkins
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('Package') {
+            steps {
+                echo 'Listing generated artifacts...'
+                sh 'ls -l target || echo "No target directory"'
+            }
+        }
+        stage('Deploy (placeholder)') {
+            steps {
+                echo 'Deploying build artifact (placeholder)...'
+                // Example: copy JAR to a directory or trigger a deployment script
+                // sh 'scp target/myapp.jar deploy@server:/opt/apps/'
+            }
+        }
+    }
+    post {
+        success {
+            echo 'Build and tests completed successfully!'
+        }
+        failure {
+            echo 'Build or tests failed. Check Jenkins console output.'
+        }
+    }
+}
