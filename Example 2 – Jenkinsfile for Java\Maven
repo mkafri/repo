@@ -1,4 +1,3 @@
-```c++
 pipeline {
     agent any
     options {
